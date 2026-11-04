@@ -1,7 +1,7 @@
 // Bewaart alleen de app zelf (HTML, CSS, JS, iconen), zodat hij snel opent.
 // Gegevens van GitHub en Bitvavo gaan nooit via deze cache: die worden altijd vers opgehaald.
-const VERSION = "meekijk-v4";
-const SHELL = ["./", "index.html", "style.css", "app.js", "core.js", "manifest.webmanifest",
+const VERSION = "meekijk-v5";
+const SHELL = ["./", "index.html", "style.css", "app.js", "core.js", "market.js", "vendor/lightweight-charts.mjs", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

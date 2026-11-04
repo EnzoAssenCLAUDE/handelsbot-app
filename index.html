@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Handelsbot</title>
-<meta name="description" content="Meekijken met de eigen handelsbot. Privé: gegevens alleen met een leessleutel.">
+<meta name="description" content="Live meekijken met de eigen handelsbot (alleen lezen).">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#1C1B19">
-<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#161513">
+<meta name="color-scheme" content="dark light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,86 +18,131 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400&family=Lato:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;500&family=Lato:wght@400;700&display=swap">
 <link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("meekijk.thema");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <script type="module" src="app.js"></script>
 </head>
 <body>
 <div class="goudlijn"></div>
 
-<!-- Instellen: alleen zichtbaar zonder (werkende) sleutel -->
-<section id="instellen" class="scherm" hidden>
-  <header class="band"><div class="wrap">
-    <p class="label">Eenmalig instellen</p>
-    <h1>Meekijken met de bot</h1>
-    <p class="kern">De app bevat zelf geen gegevens. Hij leest het logboek van de bot uit je privé-repository,
+<!-- ============ Kop: markt en live koers ============ -->
+<header class="kop">
+  <div class="markt wrap-breed">
+    <div class="paar"><span class="munt" aria-hidden="true">₿</span><div><b>BTC-EUR</b><small>Bitcoin · Euro</small></div></div>
+    <div class="prijs"><b id="prijs" class="getal">–</b><span id="wijziging" class="chip">–</span></div>
+    <div class="knoppen">
+      <span class="verbinding" id="verbinding" title="Verbinding met Bitvavo"><i></i><span>Verbinden</span></span>
+      <button class="icoon" id="thema" aria-label="Licht of donker" title="Licht of donker">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <button class="icoon" id="naarinstellen" aria-label="Bot koppelen" title="Bot koppelen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    </div>
+  </div>
+  <dl class="stats wrap-breed" id="stats">
+    <div><dt>24u hoog</dt><dd id="s-hoog">–</dd></div>
+    <div><dt>24u laag</dt><dd id="s-laag">–</dd></div>
+    <div><dt>24u volume</dt><dd id="s-vol">–</dd></div>
+    <div><dt>Bied / laat</dt><dd id="s-spread">–</dd></div>
+    <div class="botgrens"><dt>Bot-grens (200d)</dt><dd id="s-grens">–</dd></div>
+  </dl>
+</header>
+
+<!-- ============ Botstrook ============ -->
+<section class="botstrook" aria-label="Stand van de bot">
+  <div class="wrap-breed strook" id="strook">
+    <span class="stand-pil" id="b-stand">Bot</span>
+    <div class="b-cijfer"><small>Waarde nu (geschat)</small><b id="b-waarde">–</b></div>
+    <div class="b-cijfer"><small>Sinds start</small><b id="b-resultaat">–</b></div>
+    <div class="b-cijfer"><small>vs. bitcoin vasthouden</small><b id="b-hold">–</b></div>
+    <div class="b-cijfer"><small>Als de dag nu sloot</small><b id="b-signaal">–</b></div>
+    <div class="b-cijfer"><small>Volgende besluit</small><b id="b-volgende">–</b></div>
+  </div>
+  <div id="meldingen" class="wrap-breed"></div>
+</section>
+
+<!-- ============ Handelsscherm ============ -->
+<main class="scherm-grid wrap-breed">
+  <section class="paneel grafiek-paneel" aria-label="Koersgrafiek">
+    <div class="werkbalk">
+      <div class="segment" id="intervallen" role="group" aria-label="Interval">
+        <button data-iv="1m">1m</button><button data-iv="5m">5m</button><button data-iv="15m">15m</button><button data-iv="1h" aria-pressed="true">1u</button><button data-iv="4h">4u</button><button data-iv="1d">1d</button><button data-iv="1W">1w</button>
+      </div>
+      <div class="segment" role="group" aria-label="Lagen">
+        <button id="t-sma" aria-pressed="true" title="Het 200-daags gemiddelde: sluit de dag daarboven, dan zit de bot in bitcoin">Bot-grens</button><button id="t-trades" aria-pressed="true" title="Aan- en verkopen van de bot">Bot-trades</button><button id="t-vol" aria-pressed="true">Volume</button>
+      </div>
+    </div>
+    <div class="grafiek-houder">
+      <div class="legenda-ohlc" id="ohlc" aria-live="off"></div>
+      <div class="grafiek" id="grafiek"></div>
+    </div>
+  </section>
+
+  <div class="tabs" role="tablist" aria-label="Panelen">
+    <button role="tab" data-tab="boek" aria-selected="true">Orderboek</button><button role="tab" data-tab="trans" aria-selected="false">Transacties</button><button role="tab" data-tab="bot" aria-selected="false">Bot</button><button role="tab" data-tab="log" aria-selected="false">Logboek</button>
+  </div>
+
+  <section class="paneel boek" data-paneel="boek" aria-label="Orderboek">
+    <h2>Orderboek</h2>
+    <div class="kolomkop"><span>Prijs</span><span>BTC</span><span>Totaal €</span></div>
+    <div class="asks" id="asks"></div>
+    <div class="midden" id="midden">–</div>
+    <div class="bids" id="bids"></div>
+  </section>
+
+  <section class="paneel trans" data-paneel="trans" aria-label="Laatste transacties op Bitvavo">
+    <h2>Transacties</h2>
+    <div class="kolomkop"><span>Prijs</span><span>BTC</span><span>Tijd</span></div>
+    <div id="trades" class="trades"></div>
+  </section>
+
+  <section class="paneel botpaneel" data-paneel="bot" aria-label="Je bot">
+    <h2>Je bot</h2>
+    <div id="botinhoud"></div>
+  </section>
+
+  <section class="paneel logpaneel" data-paneel="log" aria-label="Logboek van de bot">
+    <h2>Logboek</h2>
+    <ol id="logboek" class="logboek"></ol>
+  </section>
+</main>
+
+<footer class="wrap-breed voet">
+  <p>Alleen lezen: deze app kan niet handelen. Koers, orderboek en transacties zijn live van Bitvavo.
+    Saldo en besluiten van de bot komen uit het logboek van de nachtrun. De bot beslist één keer per nacht,
+    op de slotkoers van de dag (01:17 in de winter, 02:17 in de zomer). “Bitcoin vasthouden” betekent: bij de eerste run voor
+    de volle €100 gekocht, 0,36% kosten, nooit verkocht. Resultaten uit het verleden zeggen weinig over de toekomst.</p>
+  <p id="bijgewerkt"></p>
+  <p>Grafiek: <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener">TradingView Lightweight Charts</a> (Apache 2.0).</p>
+</footer>
+
+<!-- ============ Bot koppelen ============ -->
+<dialog id="instellen" aria-labelledby="inst-titel">
+  <form id="form" autocomplete="off">
+    <p class="label">Bot koppelen</p>
+    <h2 id="inst-titel">Laat de app je bot zien</h2>
+    <p class="uitleg-kort">De koers werkt zonder koppeling. Voor je saldo, trades en logboek leest de app je privé-repository,
       met een sleutel die alleen <em>lezen</em> mag. Die sleutel blijft op dit toestel.</p>
-  </div></header>
-  <main class="wrap">
-    <form id="form" autocomplete="off">
-      <label>Repository<span>eigenaar/naam, zoals op GitHub</span>
-        <input id="repo" name="repo" required placeholder="eigenaar/naam" spellcheck="false" autocapitalize="off"></label>
-      <label>Leessleutel (fine-grained token)<span>begint met github_pat_</span>
-        <input id="token" name="token" type="password" required placeholder="github_pat_…" spellcheck="false" autocapitalize="off"></label>
-      <p id="formfout" class="fout" role="alert" hidden></p>
-      <button type="submit">Opslaan en openen</button>
-    </form>
-    <details class="uitleg" open>
+    <label>Repository<span>eigenaar/naam</span>
+      <input id="repo" name="repo" placeholder="eigenaar/naam" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
+    <label>Leessleutel<span>begint met github_pat_</span>
+      <input id="token" name="token" type="password" placeholder="github_pat_…" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
+    <p id="formfout" class="fout" role="alert" hidden></p>
+    <div class="formknoppen">
+      <button type="submit" id="opslaan">Opslaan</button>
+      <button type="button" id="sluit" class="licht">Sluiten</button>
+    </div>
+    <details class="uitleg">
       <summary>Zo maak je de leessleutel</summary>
       <ol>
-        <li>Open <a href="https://github.com/settings/personal-access-tokens/new?name=meekijkapp&amp;description=Alleen%20lezen%20voor%20de%20meekijkapp&amp;target_name=EnzoAssenCLAUDE&amp;expires_in=90&amp;contents=read&amp;actions=read&amp;variables=read" target="_blank" rel="noopener">dit voorgevulde GitHub-formulier</a>. Naam, vervaldatum en de leesrechten staan al goed.</li>
-        <li>Eén ding zelf kiezen: bij <b>Repository access</b> tik je <b>Only select repositories</b> en kies je de repository van de bot.</li>
-        <li>Onderaan <b>Generate token</b>, kopieer de sleutel (begint met github_pat_) en plak hem hierboven.</li>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new?name=meekijkapp&amp;description=Alleen%20lezen%20voor%20de%20meekijkapp&amp;target_name=EnzoAssenCLAUDE&amp;expires_in=90&amp;contents=read&amp;actions=read&amp;variables=read" target="_blank" rel="noopener">dit voorgevulde GitHub-formulier</a>. Naam, vervaldatum en leesrechten staan al goed.</li>
+        <li>Bij <b>Repository access</b>: tik <b>Only select repositories</b> en kies de repository van de bot.</li>
+        <li>Onderaan <b>Generate token</b>, kopieer de sleutel en plak hem hierboven.</li>
       </ol>
       <p>Met deze sleutel kan niemand handelen, geld opnemen of de bot veranderen. Je Bitvavo-sleutels komen nooit in deze app.</p>
     </details>
-  </main>
-</section>
-
-<!-- Hoofdscherm -->
-<section id="hoofd" class="scherm" hidden>
-  <header class="band"><div class="wrap">
-    <div class="balk">
-      <p class="label" id="stand">Laden…</p>
-      <div class="knoppen">
-        <button id="vernieuw" class="icoon" aria-label="Vernieuwen" title="Vernieuwen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button id="naarinstellen" class="icoon" aria-label="Instellingen" title="Instellingen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-      </div>
-    </div>
-    <p class="mini">Geschatte waarde nu</p>
-    <h1 id="waarde">–</h1>
-    <p class="kern" id="waardeuitleg"></p>
-    <p class="live"><span class="stip" id="stip"></span><span id="koers">Koers laden…</span></p>
-  </div></header>
-
-  <main class="wrap">
-    <div id="meldingen"></div>
-
-    <div class="cijfers" id="cijfers"></div>
-
-    <h2>Koers en 200-daags gemiddelde</h2>
-    <div class="bereik" role="group" aria-label="Periode">
-      <button data-dagen="90">3 mnd</button><button data-dagen="365" aria-pressed="true">1 jaar</button><button data-dagen="1000">alles</button>
-    </div>
-    <figure class="grafiek" id="grafiek" aria-label="Grafiek van de slotkoers en het 200-daags gemiddelde"></figure>
-    <p class="legenda"><span class="l-koers"></span>slotkoers <span class="l-sma"></span>200-daags gemiddelde
-      <span class="l-koop"></span>koop <span class="l-verkoop"></span>verkoop</p>
-
-    <h2>Volgende stap van de bot</h2>
-    <div id="volgende" class="blok"></div>
-
-    <h2>Logboek</h2>
-    <ol id="logboek" class="logboek"></ol>
-
-    <p class="noot">De bot beslist één keer per nacht, kort na het sluiten van de dagkaars (01:17 in de winter, 02:17 in de zomer;
-      GitHub start soms later). De koers in deze app is live van Bitvavo; saldo en besluiten komen uit het logboek van de laatste run.
-      De “geschatte waarde nu” is de positie van na die run maal de huidige biedprijs, zonder verkoopkosten. Je echte saldo staat in Bitvavo.
-      “Bitcoin vasthouden” betekent: op de dag van de eerste run voor de volle €100 bitcoin gekocht, 0,36% kosten, nooit verkocht.
-      Resultaten uit het verleden zeggen weinig over de toekomst.</p>
-    <p class="voet" id="bijgewerkt"></p>
-  </main>
-</section>
+    <button type="button" id="vergeet" class="link" hidden>Sleutel van dit toestel wissen</button>
+  </form>
+</dialog>
 </body>
 </html>

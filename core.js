@@ -89,3 +89,11 @@ export function pct(x, decimals = 1) {
   if (typeof x !== "number" || !isFinite(x)) return "–";
   return (x * 100).toFixed(decimals).replace(".", ",") + "%";
 }
+
+// De exacte grens voor het volgende besluit. De bot zit in bitcoin als slot > gemiddelde(200), waarbij de
+// nieuwe slotkoers zelf meetelt: slot > (S199 + slot) / 200  <=>  slot > S199 / 199.
+// Dus: sluit de dag boven het gemiddelde van de laatste 199 gesloten dagen, dan wil de bot bitcoin.
+export function threshold(closes, n = SMA_DAYS) {
+  if (closes.length < n - 1) return null;
+  return closes.slice(-(n - 1)).reduce((a, b) => a + b, 0) / (n - 1);
+}
