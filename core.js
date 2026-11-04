@@ -1,8 +1,9 @@
 // Rekenkern van de meekijkapp. Puur: geen netwerk, geen DOM. Ook getest in Node (tests/test_app.py),
 // waar de uitkomst wordt vergeleken met trader/report.py: app en ochtendrapport moeten hetzelfde zeggen.
 
-// Gemeten bij de live test-order van 3 nov 2026 (zelfde waarde als FEE in trader/report.py).
-export const FEE = 0.0036;
+// Kosten per order, gelijk aan FEE in trader/report.py (de test bewaakt dat). De eerste echte order
+// (4 nov 2026) kostte 0,25%; de 0,36% van 3 nov gold alleen voor de kleine test-order van €5,50.
+export const FEE = 0.0025;
 export const START_EUR = 100;
 export const SMA_DAYS = 200;
 const DAY_MS = 86400000;

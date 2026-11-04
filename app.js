@@ -1,9 +1,9 @@
 // Handelsscherm: alleen lezen. Geen Bitvavo-sleutels, geen knoppen die handelen.
 // Markt (koers, candles, orderboek, transacties): openbare Bitvavo-data, live via websocket.
 // Bot (saldo, besluiten, logboek): branch `logboek` van de privé-repo, met een leessleutel die alleen op dit toestel staat.
-import * as core from "./core.js?v=6";
-import * as mk from "./market.js?v=6";
-import { createChart, CrosshairMode, LineStyle } from "./vendor/lightweight-charts.mjs?v=6";
+import * as core from "./core.js?v=7";
+import * as mk from "./market.js?v=7";
+import { createChart, CrosshairMode, LineStyle } from "./vendor/lightweight-charts.mjs?v=7";
 
 const $ = (id) => document.getElementById(id);
 const BRANCH = "logboek";
@@ -583,6 +583,7 @@ document.addEventListener("visibilitychange", () => {
 function measure() { document.documentElement.style.setProperty("--kop-h", `${document.querySelector(".kop").offsetHeight}px`); }
 addEventListener("resize", () => { measure(); schedule(); });
 
+$("fee").textContent = core.pct(core.FEE, 2);
 applyChartTheme();
 selectTab(st.tab);
 measure();
