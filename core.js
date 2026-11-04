@@ -35,21 +35,35 @@ export function summary(all, startEur = START_EUR) {
   };
 }
 
-// Positie direct na de laatste run: saldo uit het besluit, plus de order van die run.
-// Bitvavo: bij kopen gaat bedrag + kosten van de euro af, bij verkopen bedrag − kosten erbij (paper idem).
-export function position(all) {
+// Stand (euro en bitcoin) direct na elk besluit van de huidige stand (paper of live): het saldo uit het
+// besluit, plus de order van die run. Bitvavo: bij kopen gaat bedrag + kosten van de euro af, bij verkopen
+// bedrag − kosten erbij (paper idem). Alleen een order sinds het vorige besluit telt mee.
+export function history(all) {
   const s = summary(all);
-  if (!s.decisions) return null;
-  const mine = all.filter((e) => e.mode === s.mode);
-  const i = mine.map((e) => e.type).lastIndexOf("decision");
-  const d = mine[i];
-  let eur = d.eur, qty = d.qty;
-  if (d.action === "buy" || d.action === "sell") {
-    const o = mine.slice(0, i).reverse().find((e) => e.type === "order" && !e.test);
-    if (o && o.side === "buy") { eur -= o.eur + (o.fee || 0); qty += o.qty; }
-    if (o && o.side === "sell") { eur += o.eur - (o.fee || 0); qty -= o.qty; }
+  if (!s.decisions) return [];
+  const out = [];
+  let order = null;
+  for (const e of all.filter((x) => x.mode === s.mode)) {
+    if (e.type === "order" && !e.test) order = e;
+    if (e.type !== "decision") continue;
+    let eur = e.eur, qty = e.qty;
+    if ((e.action === "buy" || e.action === "sell") && order) {
+      if (order.side === "buy") { eur -= order.eur + (order.fee || 0); qty += order.qty; }
+      if (order.side === "sell") { eur += order.eur - (order.fee || 0); qty -= order.qty; }
+    }
+    order = null;
+    out.push({ eur: Math.max(eur, 0), qty: Math.max(qty, 0), at: e.at, mode: e.mode,
+      value: e.value_after_eur ?? e.value_eur, bid: e.bid, ask: e.ask });
   }
-  return { eur: Math.max(eur, 0), qty: Math.max(qty, 0), at: d.at, mode: d.mode };
+  return out;
+}
+
+// Positie direct na de laatste run.
+export function position(all) {
+  const h = history(all);
+  if (!h.length) return null;
+  const { eur, qty, at, mode } = h[h.length - 1];
+  return { eur, qty, at, mode };
 }
 
 // Bitvavo-kaarsen [ms, open, high, low, close, volume], nieuwste eerst. Alleen gesloten kaarsen,

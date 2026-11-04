@@ -19,18 +19,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;500&family=Lato:wght@400;700&display=swap">
-<link rel="stylesheet" href="style.css?v=7">
-<script>try{var t=localStorage.getItem("meekijk.thema");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
-<script type="module" src="app.js?v=7"></script>
+<link rel="stylesheet" href="style.css?v=8">
+<script>try{var t=localStorage.getItem("meekijk.thema");if(t)document.documentElement.dataset.theme=t.replace(/"/g,"")}catch(e){}</script>
+<script type="module" src="app.js?v=8"></script>
 </head>
 <body>
 <div class="goudlijn"></div>
 
-<!-- ============ Kop: markt en live koers ============ -->
-<header class="kop">
-  <div class="markt wrap-breed">
-    <div class="paar"><span class="munt" aria-hidden="true">₿</span><div><b>BTC-EUR</b><small>Bitcoin · Euro</small></div></div>
-    <div class="prijs"><b id="prijs" class="getal">–</b><span id="wijziging" class="chip">–</span></div>
+<!-- ============ Appbalk ============ -->
+<header class="appbalk">
+  <div class="wrap-breed balk">
+    <h1 class="titel" id="titel">Overzicht</h1>
+    <nav class="nav-boven" aria-label="Schermen">
+      <button data-view="overzicht" aria-current="page">Overzicht</button><button data-view="markten">Markten</button><button data-view="grafiek">Grafiek</button>
+    </nav>
     <div class="knoppen">
       <span class="verbinding" id="verbinding" title="Verbinding met Bitvavo"><i></i><span>Verbinden</span></span>
       <button class="icoon" id="thema" aria-label="Licht of donker" title="Licht of donker">
@@ -39,76 +41,105 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     </div>
   </div>
-  <dl class="stats wrap-breed" id="stats">
-    <div><dt>24u hoog</dt><dd id="s-hoog">–</dd></div>
-    <div><dt>24u laag</dt><dd id="s-laag">–</dd></div>
-    <div><dt>24u volume</dt><dd id="s-vol">–</dd></div>
-    <div><dt>Bied / laat</dt><dd id="s-spread">–</dd></div>
-    <div class="botgrens"><dt>Bot-grens (200d)</dt><dd id="s-grens">–</dd></div>
-  </dl>
 </header>
 
-<!-- ============ Botstrook ============ -->
-<section class="botstrook" aria-label="Stand van de bot">
-  <div class="wrap-breed strook" id="strook">
-    <span class="stand-pil" id="b-stand">Bot</span>
-    <div class="b-cijfer"><small>Waarde nu (geschat)</small><b id="b-waarde">–</b></div>
-    <div class="b-cijfer"><small>Sinds start</small><b id="b-resultaat">–</b></div>
-    <div class="b-cijfer"><small>vs. bitcoin vasthouden</small><b id="b-hold">–</b></div>
-    <div class="b-cijfer"><small>Als de dag nu sloot</small><b id="b-signaal">–</b></div>
-    <div class="b-cijfer"><small>Volgende besluit</small><b id="b-volgende">–</b></div>
+<!-- ============ Overzicht ============ -->
+<section class="view" id="v-overzicht" aria-label="Overzicht">
+  <div class="held">
+    <div class="wrap-breed held-tekst">
+      <div>
+        <p class="label">Totaal, geschat met de live koers</p>
+        <p class="totaal getal" id="o-totaal">–</p>
+        <p class="rendement" id="o-rendement"></p>
+      </div>
+      <p class="ondertitel" id="o-uitleg"></p>
+    </div>
+    <div class="wrap-breed held-lijn" id="held-lijn" hidden>
+      <div class="waardegrafiek" id="waardegrafiek" aria-label="Waarde van je bot sinds de start"></div>
+      <p class="legenda-mini"><span class="l-waarde"></span>jouw bot<span class="l-hold"></span>bitcoin vasthouden<span class="l-inleg"></span>inleg</p>
+      <p class="noot-klein" id="waardenoot"></p>
+    </div>
   </div>
-  <div id="meldingen" class="wrap-breed"></div>
+  <div class="wrap-breed overzicht-grid">
+    <div id="meldingen" class="meldingen"></div>
+    <section class="bots" id="bots" aria-label="Je bots"></section>
+    <section class="paneel kijklijst-mini" aria-label="Je munten">
+      <div class="paneelkop"><h2>Je munten</h2><button class="tekstknop" data-view="markten">Alle markten</button></div>
+      <div id="o-markten" class="munten"></div>
+    </section>
+    <section class="paneel logpaneel" aria-label="Logboek van de bot">
+      <div class="paneelkop"><h2>Logboek</h2></div>
+      <ol id="logboek" class="logboek"></ol>
+    </section>
+  </div>
 </section>
 
-<!-- ============ Handelsscherm ============ -->
-<main class="scherm-grid wrap-breed">
-  <section class="paneel grafiek-paneel" aria-label="Koersgrafiek">
-    <div class="werkbalk">
-      <div class="segment" id="intervallen" role="group" aria-label="Interval">
-        <button data-iv="1m">1m</button><button data-iv="5m">5m</button><button data-iv="15m">15m</button><button data-iv="1h" aria-pressed="true">1u</button><button data-iv="4h">4u</button><button data-iv="1d">1d</button><button data-iv="1W">1w</button>
-      </div>
-      <div class="segment" role="group" aria-label="Lagen">
-        <button id="t-sma" aria-pressed="true" title="Het 200-daags gemiddelde: sluit de dag daarboven, dan zit de bot in bitcoin">Bot-grens</button><button id="t-trades" aria-pressed="true" title="Aan- en verkopen van de bot">Bot-trades</button><button id="t-vol" aria-pressed="true">Volume</button>
-      </div>
-    </div>
-    <div class="grafiek-houder">
-      <div class="legenda-ohlc" id="ohlc" aria-live="off"></div>
-      <div class="grafiek" id="grafiek"></div>
-    </div>
-  </section>
+<!-- ============ Markten ============ -->
+<section class="view" id="v-markten" aria-label="Markten" hidden>
+  <div class="wrap-breed marktenlijst">
+    <label class="zoek"><span class="sr">Zoek een munt</span>
+      <input id="zoek" type="search" placeholder="Zoek een munt, bijv. ETH of Solana" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
+    <p class="noot-klein" id="markten-noot">Koers in euro en verschil met 24 uur geleden. Tik op een munt voor de grafiek; met de ster zet je hem bij je munten op het beginscherm.</p>
+    <div class="paneel"><div id="munten" class="munten"></div></div>
+  </div>
+</section>
 
-  <div class="tabs" role="tablist" aria-label="Panelen">
-    <button role="tab" data-tab="boek" aria-selected="true">Orderboek</button><button role="tab" data-tab="trans" aria-selected="false">Transacties</button><button role="tab" data-tab="bot" aria-selected="false">Bot</button><button role="tab" data-tab="log" aria-selected="false">Logboek</button>
+<!-- ============ Grafiek ============ -->
+<section class="view" id="v-grafiek" aria-label="Grafiek" hidden>
+  <div class="markt-kop">
+    <div class="wrap-breed markt">
+      <button class="paar" id="paarknop" title="Andere munt kiezen"><span class="munt" id="m-icoon" aria-hidden="true">B</span>
+        <span class="paartekst"><b id="m-paar">BTC-EUR</b><small id="m-naam">Bitcoin</small></span>
+        <svg class="pijl" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="prijs"><b id="prijs" class="getal">–</b><span id="wijziging" class="chip">–</span></div>
+    </div>
+    <dl class="stats wrap-breed" id="stats">
+      <div><dt>24u hoog</dt><dd id="s-hoog">–</dd></div>
+      <div><dt>24u laag</dt><dd id="s-laag">–</dd></div>
+      <div><dt>24u volume</dt><dd id="s-vol">–</dd></div>
+      <div><dt>Bied / laat</dt><dd id="s-spread">–</dd></div>
+      <div class="botgrens" id="s-grens-blok"><dt>Bot-grens (200d)</dt><dd id="s-grens">–</dd></div>
+    </dl>
   </div>
 
-  <section class="paneel boek" data-paneel="boek" aria-label="Orderboek">
-    <h2>Orderboek</h2>
-    <div class="kolomkop"><span>Prijs</span><span>BTC</span><span>Totaal €</span></div>
-    <div class="asks" id="asks"></div>
-    <div class="midden" id="midden">–</div>
-    <div class="bids" id="bids"></div>
-  </section>
+  <div class="scherm-grid wrap-breed">
+    <section class="paneel grafiek-paneel" aria-label="Koersgrafiek">
+      <div class="werkbalk">
+        <div class="segment" id="intervallen" role="group" aria-label="Interval">
+          <button data-iv="1m">1m</button><button data-iv="5m">5m</button><button data-iv="15m">15m</button><button data-iv="1h" aria-pressed="true">1u</button><button data-iv="4h">4u</button><button data-iv="1d">1d</button><button data-iv="1W">1w</button>
+        </div>
+        <div class="segment" role="group" aria-label="Lagen" id="lagen">
+          <button id="t-sma" aria-pressed="true" title="Het 200-daags gemiddelde: sluit de dag daarboven, dan zit de bot in bitcoin">Bot-grens</button><button id="t-trades" aria-pressed="true" title="Aan- en verkopen van de bot">Bot-trades</button><button id="t-vol" aria-pressed="true">Volume</button>
+        </div>
+      </div>
+      <div class="grafiek-houder">
+        <div class="legenda-ohlc" id="ohlc" aria-live="off"></div>
+        <div class="grafiek" id="grafiek"></div>
+      </div>
+    </section>
 
-  <section class="paneel trans" data-paneel="trans" aria-label="Laatste transacties op Bitvavo">
-    <h2>Transacties</h2>
-    <div class="kolomkop"><span>Prijs</span><span>BTC</span><span>Tijd</span></div>
-    <div id="trades" class="trades"></div>
-  </section>
+    <div class="tabs" role="tablist" aria-label="Panelen">
+      <button role="tab" data-tab="boek" aria-selected="true">Orderboek</button><button role="tab" data-tab="trans" aria-selected="false">Transacties</button>
+    </div>
 
-  <section class="paneel botpaneel" data-paneel="bot" aria-label="Je bot">
-    <h2>Je bot</h2>
-    <div id="botinhoud"></div>
-  </section>
+    <section class="paneel boek" data-paneel="boek" aria-label="Orderboek">
+      <h2>Orderboek</h2>
+      <div class="kolomkop"><span>Prijs</span><span class="m-base">BTC</span><span>Totaal €</span></div>
+      <div class="asks" id="asks"></div>
+      <div class="midden" id="midden">–</div>
+      <div class="bids" id="bids"></div>
+    </section>
 
-  <section class="paneel logpaneel" data-paneel="log" aria-label="Logboek van de bot">
-    <h2>Logboek</h2>
-    <ol id="logboek" class="logboek"></ol>
-  </section>
-</main>
+    <section class="paneel trans" data-paneel="trans" aria-label="Laatste transacties op Bitvavo">
+      <h2>Transacties</h2>
+      <div class="kolomkop"><span>Prijs</span><span class="m-base">BTC</span><span>Tijd</span></div>
+      <div id="trades" class="trades"></div>
+    </section>
+  </div>
+</section>
 
 <footer class="wrap-breed voet">
-  <p>Alleen lezen: deze app kan niet handelen. Koers, orderboek en transacties zijn live van Bitvavo.
+  <p>Alleen lezen: deze app kan niet handelen. Koersen, orderboek en transacties zijn live van Bitvavo.
     Saldo en besluiten van de bot komen uit het logboek van de nachtrun. De bot beslist één keer per nacht,
     op de slotkoers van de dag (01:17 in de winter, 02:17 in de zomer). “Bitcoin vasthouden” betekent: bij de eerste run voor
     de volle €100 gekocht, <span id="fee">0,25%</span> kosten, nooit verkocht. Resultaten uit het verleden zeggen weinig over de toekomst.</p>
@@ -116,12 +147,19 @@
   <p>Grafiek: <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener">TradingView Lightweight Charts</a> (Apache 2.0).</p>
 </footer>
 
+<!-- ============ Navigatie onderaan (telefoon) ============ -->
+<nav class="nav-onder" aria-label="Schermen">
+  <button data-view="overzicht" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Overzicht</span></button>
+  <button data-view="markten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Markten</span></button>
+  <button data-view="grafiek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 15V9M12 15V5M17 15v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Grafiek</span></button>
+</nav>
+
 <!-- ============ Bot koppelen ============ -->
 <dialog id="instellen" aria-labelledby="inst-titel">
   <form id="form" autocomplete="off">
     <p class="label">Bot koppelen</p>
     <h2 id="inst-titel">Laat de app je bot zien</h2>
-    <p class="uitleg-kort">De koers werkt zonder koppeling. Voor je saldo, trades en logboek leest de app je privé-repository,
+    <p class="uitleg-kort">Koersen werken zonder koppeling. Voor je saldo, trades en logboek leest de app je privé-repository,
       met een sleutel die alleen <em>lezen</em> mag. Die sleutel blijft op dit toestel.</p>
     <label>Repository<span>eigenaar/naam</span>
       <input id="repo" name="repo" placeholder="eigenaar/naam" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
