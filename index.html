@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Handelsbot</title>
+<meta name="description" content="Meekijken met de eigen handelsbot. Privé: gegevens alleen met een leessleutel.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1C1B19">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Handelsbot">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400&family=Lato:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<div class="goudlijn"></div>
+
+<!-- Instellen: alleen zichtbaar zonder (werkende) sleutel -->
+<section id="instellen" class="scherm" hidden>
+  <header class="band"><div class="wrap">
+    <p class="label">Eenmalig instellen</p>
+    <h1>Meekijken met de bot</h1>
+    <p class="kern">De app bevat zelf geen gegevens. Hij leest het logboek van de bot uit je privé-repository,
+      met een sleutel die alleen <em>lezen</em> mag. Die sleutel blijft op dit toestel.</p>
+  </div></header>
+  <main class="wrap">
+    <form id="form" autocomplete="off">
+      <label>Repository<span>eigenaar/naam, zoals op GitHub</span>
+        <input id="repo" name="repo" required pattern="[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+" placeholder="eigenaar/naam" spellcheck="false" autocapitalize="off"></label>
+      <label>Leessleutel (fine-grained token)<span>begint met github_pat_</span>
+        <input id="token" name="token" type="password" required placeholder="github_pat_…" spellcheck="false" autocapitalize="off"></label>
+      <p id="formfout" class="fout" role="alert" hidden></p>
+      <button type="submit">Opslaan en openen</button>
+    </form>
+    <details class="uitleg" open>
+      <summary>Zo maak je de leessleutel</summary>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → nieuwe fine-grained token</a>.</li>
+        <li>Naam: <i>meekijkapp</i>. Vervaldatum: 90 dagen.</li>
+        <li>Repository access: <b>Only select repositories</b> → alleen de repository van de bot.</li>
+        <li>Permissions: <b>Contents: Read-only</b>. Optioneel, voor de status van de nachtrun: <b>Actions: Read-only</b> en <b>Variables: Read-only</b>.</li>
+        <li>Niets anders aanvinken. Geen schrijfrechten.</li>
+      </ol>
+      <p>Met deze sleutel kan niemand handelen, geld opnemen of de bot veranderen. Je Bitvavo-sleutels komen nooit in deze app.</p>
+    </details>
+  </main>
+</section>
+
+<!-- Hoofdscherm -->
+<section id="hoofd" class="scherm" hidden>
+  <header class="band"><div class="wrap">
+    <div class="balk">
+      <p class="label" id="stand">Laden…</p>
+      <div class="knoppen">
+        <button id="vernieuw" class="icoon" aria-label="Vernieuwen" title="Vernieuwen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="naarinstellen" class="icoon" aria-label="Instellingen" title="Instellingen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      </div>
+    </div>
+    <p class="mini">Geschatte waarde nu</p>
+    <h1 id="waarde">–</h1>
+    <p class="kern" id="waardeuitleg"></p>
+    <p class="live"><span class="stip" id="stip"></span><span id="koers">Koers laden…</span></p>
+  </div></header>
+
+  <main class="wrap">
+    <div id="meldingen"></div>
+
+    <div class="cijfers" id="cijfers"></div>
+
+    <h2>Koers en 200-daags gemiddelde</h2>
+    <div class="bereik" role="group" aria-label="Periode">
+      <button data-dagen="90">3 mnd</button><button data-dagen="365" aria-pressed="true">1 jaar</button><button data-dagen="1000">alles</button>
+    </div>
+    <figure class="grafiek" id="grafiek" aria-label="Grafiek van de slotkoers en het 200-daags gemiddelde"></figure>
+    <p class="legenda"><span class="l-koers"></span>slotkoers <span class="l-sma"></span>200-daags gemiddelde
+      <span class="l-koop"></span>koop <span class="l-verkoop"></span>verkoop</p>
+
+    <h2>Volgende stap van de bot</h2>
+    <div id="volgende" class="blok"></div>
+
+    <h2>Logboek</h2>
+    <ol id="logboek" class="logboek"></ol>
+
+    <p class="noot">De bot beslist één keer per nacht, kort na het sluiten van de dagkaars (01:17 in de winter, 02:17 in de zomer;
+      GitHub start soms later). De koers in deze app is live van Bitvavo; saldo en besluiten komen uit het logboek van de laatste run.
+      De “geschatte waarde nu” is de positie van na die run maal de huidige biedprijs, zonder verkoopkosten. Je echte saldo staat in Bitvavo.
+      “Bitcoin vasthouden” betekent: op de dag van de eerste run voor de volle €100 bitcoin gekocht, 0,36% kosten, nooit verkocht.
+      Resultaten uit het verleden zeggen weinig over de toekomst.</p>
+    <p class="voet" id="bijgewerkt"></p>
+  </main>
+</section>
+</body>
+</html>
