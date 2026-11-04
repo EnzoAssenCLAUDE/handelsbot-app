@@ -1,9 +1,9 @@
 // Handelsscherm: alleen lezen. Geen Bitvavo-sleutels, geen knoppen die handelen.
 // Markt (koers, candles, orderboek, transacties): openbare Bitvavo-data, live via websocket.
 // Bot (saldo, besluiten, logboek): branch `logboek` van de privé-repo, met een leessleutel die alleen op dit toestel staat.
-import * as core from "./core.js";
-import * as mk from "./market.js";
-import { createChart, CrosshairMode, LineStyle } from "./vendor/lightweight-charts.mjs";
+import * as core from "./core.js?v=6";
+import * as mk from "./market.js?v=6";
+import { createChart, CrosshairMode, LineStyle } from "./vendor/lightweight-charts.mjs?v=6";
 
 const $ = (id) => document.getElementById(id);
 const BRANCH = "logboek";
@@ -593,6 +593,12 @@ loadDaily();
 loadLog();
 startAll(false);
 
+const hadController = !!navigator.serviceWorker?.controller;
 if ("serviceWorker" in navigator && location.protocol === "https:") {
-  navigator.serviceWorker.register("sw.js").catch(() => { /* werkt ook zonder */ });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => {
+    // Nieuwe versie gevonden terwijl de app open is: één keer herladen zodra die actief is.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloaded && hadController) { reloaded = true; location.reload(); } });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => { /* werkt ook zonder */ });
 }
