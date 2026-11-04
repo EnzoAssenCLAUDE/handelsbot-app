@@ -368,7 +368,7 @@ $("form").addEventListener("submit", async (ev) => {
     state.cfg = old;
     $("formfout").hidden = false;
     $("formfout").textContent = e.status === 401 ? "Deze sleutel wordt door GitHub geweigerd."
-      : e.status === 404 ? "Repository niet gevonden, of de sleutel heeft er geen toegang toe."
+      : e.status === 404 ? "GitHub geeft deze sleutel geen toegang tot deze repository. Kies bij de sleutel 'Only select repositories', vink de repository aan en zet Contents op Read-only."
       : `Controle mislukt (${e.message}). Probeer het opnieuw.`;
     return;
   }

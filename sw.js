@@ -1,6 +1,6 @@
 // Bewaart alleen de app zelf (HTML, CSS, JS, iconen), zodat hij snel opent.
 // Gegevens van GitHub en Bitvavo gaan nooit via deze cache: die worden altijd vers opgehaald.
-const VERSION = "meekijk-v2";
+const VERSION = "meekijk-v3";
 const SHELL = ["./", "index.html", "style.css", "app.js", "core.js", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
