@@ -351,8 +351,15 @@ function showMain() {
 
 $("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
-  const repo = $("repo").value.trim().replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "");
-  const token = $("token").value.trim();
+  // Ruim op wat telefoons toevoegen: spaties, een volledige GitHub-link, ".git" aan het eind.
+  const repo = $("repo").value.replace(/\s+/g, "").replace(/^(https?:\/\/)?(www\.)?github\.com\//i, "")
+    .replace(/\.git$/i, "").replace(/\/+$/, "");
+  const token = $("token").value.replace(/\s+/g, "");
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
+    $("formfout").hidden = false;
+    $("formfout").textContent = "Vul de repository in als eigenaar/naam, bijvoorbeeld iemand/mijn-repo.";
+    return;
+  }
   const old = state.cfg;
   state.cfg = { repo, token };
   try {
